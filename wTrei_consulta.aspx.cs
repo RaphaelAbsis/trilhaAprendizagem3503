@@ -28,8 +28,8 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         if (!Page.IsPostBack)
         {
             CarregaDrop();
-           
         }
+
     }
 
     private void CarregaDrop()
@@ -43,7 +43,7 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         dpFormulario.Items.Insert(0, new ListItem() { Text = "", Value = "0" });
     }
 
-    
+
 
     protected void Page_PreInit(object sender, System.EventArgs e)
     {
@@ -78,7 +78,6 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
     protected void pnlPesquisa_Pesquisar(object sender, EventArgs e)
     {
         CarregaGrid();
-        limparFiltros();
     }
 
     protected void btExcluir_Click(object sender, EventArgs e)
@@ -103,22 +102,27 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
     {
         Banco.Conexao conexao = new Banco.Conexao();
         bool bRetorno = true;
+     
         try
         {
+            
             Treinamentos.TreinamentoDB treinamentoDB = new TreinamentoDB();
             conexao.AbreConexao();
             conexao.IniciaTransacao();
             Treinamentos.Treinamento treinamento = new Treinamentos.Treinamento();
-            TreinamentoCargo cargo = new TreinamentoCargo();
-            TreinamentoCargoDB dB = new TreinamentoCargoDB();
-            cargo.TreinamentoID = treinamento.TreinamentoID;
+            TreinamentoAlvo alvo = new TreinamentoAlvo();
+            TreinamentoAlvoDB dB = new TreinamentoAlvoDB();
+            alvo.TreinamentoID = treinamento.TreinamentoID;
+            
+
             foreach (string lista in grdRegistros.CodigosSelecionados)
             {
                 treinamento.TreinamentoID = int.Parse(lista);
-                cargo.TreinamentoID = treinamento.TreinamentoID;
-                bRetorno = dB.ExcluiPeloTreinamento(conexao, cargo.TreinamentoID);
+                alvo.TreinamentoID = treinamento.TreinamentoID;
+                bRetorno = dB.ExcluiPeloTreinamento(conexao, alvo.TreinamentoID);
                 bRetorno = treinamentoDB.Exclui(conexao, treinamento);
-                bRetorno = Avaliacao.Anexo.ExcluirDocumento(cargo.TreinamentoID.ToString());
+                bRetorno = Avaliacao.Anexo.ExcluirDocumento(alvo.TreinamentoID.ToString());
+                
                 if (!bRetorno)
                 {
                     break;
@@ -144,123 +148,46 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
 
     public void CarregaGrid()
     {
-        DataTable consultaDTTodosFiltros = MontarDataTablePorTodosFiltros();
-        DataTable consultaDTTodosTituloCodigo = MontarDataTablePeloTituloCodigo();
-        DataTable consultaDTTodosTituloPrazo = MontarDataTablePeloTituloPrazo();
-        DataTable consultaDTTodosCodigoPrazo = MontarDataTablePeloCodigoPrazo();
-        DataTable consultaDTCodigo = MontarDataTablePeloCodigo();
-        DataTable consultaDTTitulo = MontarDataTablePeloTitulo();
-        DataTable consultaDTTodosPrazo = MontarDataTablePeloPrazo();
-        DataTable consultaDTVazio = MontarDataTablePeloVazio();
-        if (consultaDTTodosFiltros.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpCodigo.Texto) && !string.IsNullOrWhiteSpace(cpTitulo.Texto) && !dPrazo.EstaVazio)
+        DataTable oDt = MontaDataTable();
+        grdRegistros.CarregaDados(oDt);
+        if (oDt.Rows.Count == 0)
         {
-            grdRegistros.CarregaDados(consultaDTTodosFiltros);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTTodosTituloCodigo.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpTitulo.Texto) && !string.IsNullOrWhiteSpace(cpCodigo.Texto) && dPrazo.EstaVazio)
-        {
-            grdRegistros.CarregaDados(consultaDTTodosTituloCodigo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTTodosTituloPrazo.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpTitulo.Texto) && !dPrazo.EstaVazio && string.IsNullOrWhiteSpace(cpCodigo.Texto))
-        {
-            grdRegistros.CarregaDados(consultaDTTodosTituloPrazo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTTodosCodigoPrazo.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpCodigo.Texto) && !dPrazo.EstaVazio && string.IsNullOrWhiteSpace(cpTitulo.Texto))
-        {
-            grdRegistros.CarregaDados(consultaDTTodosCodigoPrazo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTCodigo.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpCodigo.Texto) && string.IsNullOrWhiteSpace(cpTitulo.Texto) && dPrazo.EstaVazio)
-        {
-            grdRegistros.CarregaDados(consultaDTCodigo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTTitulo.Rows.Count > 0 && !string.IsNullOrWhiteSpace(cpTitulo.Texto) && string.IsNullOrWhiteSpace(cpCodigo.Texto) && dPrazo.EstaVazio)
-        {
-            grdRegistros.CarregaDados(consultaDTTitulo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTTodosPrazo.Rows.Count > 0 && !dPrazo.EstaVazio && string.IsNullOrWhiteSpace(cpCodigo.Texto) && string.IsNullOrWhiteSpace(cpTitulo.Texto))
-        {
-            grdRegistros.CarregaDados(consultaDTTodosPrazo);
-            pnlRegistros.Visible = true;
-        }
-        else if (consultaDTVazio.Rows.Count > 0 && string.IsNullOrWhiteSpace(cpCodigo.Texto) && string.IsNullOrWhiteSpace(cpTitulo.Texto) && dPrazo.EstaVazio)
-        {
-            grdRegistros.CarregaDados(consultaDTVazio);
-            pnlRegistros.Visible = true;
-        }
-        else
-        {
-            grdRegistros.CarregaDados(consultaDTVazio);
-            pnlRegistros.Visible = true;
             msgAlert.Texto = "Não foi encontrado nenhum registro com os filtros selecionados.";
             msgAlert.Exibir();
         }
     }
 
-    private DataTable MontarDataTablePorTodosFiltros()
+    private string MontaFiltro()
     {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Titulo = '" + cpTitulo.Texto + "' and #Codigo = '" + cpCodigo.Texto + "' and #Prazo = '" + dPrazo.SData + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
+        string sFiltro = string.Empty;
+        
+        if (!string.IsNullOrWhiteSpace(txtPesqTitulo.Texto))
+        {
+            if (sFiltro.Length > 0) sFiltro += " and ";
+            sFiltro += "#Titulo = '" + txtPesqTitulo.Texto + "'";
+        }
+        if (!string.IsNullOrWhiteSpace(txtPesqPeriodo.SDataInicial) && !string.IsNullOrWhiteSpace(txtPesqPeriodo.SDataInicial))
+        {
+            if (sFiltro.Length > 0) sFiltro += " and ";
+            sFiltro += "(#DataFinal >= '" + txtPesqPeriodo.SDataInicial + "' and #DataInicial <= '" + txtPesqPeriodo.SDataFinal + "')";
+        }
+        else if (!string.IsNullOrWhiteSpace(txtPesqPeriodo.SDataInicial))
+        {
+            if (sFiltro.Length > 0) sFiltro += " and ";
+            sFiltro += "#DataFinal >= '" + txtPesqPeriodo.SDataInicial + "'";
+        }
+        else if (!string.IsNullOrWhiteSpace(txtPesqPeriodo.SDataFinal))
+        {
+            if (sFiltro.Length > 0) sFiltro += " and ";
+            sFiltro += "#DataInicial <= '" + txtPesqPeriodo.SDataFinal + "'";
+        }
+        return sFiltro;
     }
 
-    private DataTable MontarDataTablePeloTituloCodigo()
+    private DataTable MontaDataTable()
     {
         TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Titulo = '" + cpTitulo.Texto + "' and #Codigo = '" + cpCodigo.Texto + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloTituloPrazo()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Titulo = '" + cpTitulo.Texto + "' and #Prazo = '" + dPrazo.SData + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloCodigoPrazo()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Codigo = '" + cpCodigo.Texto + "' and #Prazo = '" + dPrazo.SData + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloCodigo()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Codigo = '" + cpCodigo.Texto + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloTitulo()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Titulo = '" + cpTitulo.Texto + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloPrazo()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "#Prazo = '" + dPrazo.SData + "'");
-        DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
-        return oDT;
-    }
-
-    private DataTable MontarDataTablePeloVazio()
-    {
-        TreinamentoDB db = new TreinamentoDB();
-        List<Treinamentos.Treinamento> lista = db.Carrega(null, "");
+        List<Treinamentos.Treinamento> lista = db.Carrega(null, MontaFiltro());
         DataTable oDT = FuncoesTypes.ConverteListaParaDataTable(lista);
         return oDT;
     }
@@ -298,23 +225,25 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         trei.TreinamentoID = int.Parse(sId);
         if (db.Carrega(conexao, ref trei))
         {
+            
             hfId.Value = sId;
             txtCodigo.Texto = trei.Codigo;
-            txtCampo_Titulo.Texto = trei.Titulo;
+            txtTitulo.Texto = trei.Titulo;
             txtLinkVideo.Texto = trei.LinkVideo;
-            txtPrazo.Texto = trei.Prazo.ToString("dd/MM/yyyy");
+            txtPrazo.Texto = trei.Prazo.ToString();
+            txtCargaHoraria.Texto = trei.CargaHoraria;
+            txtDataInicial.SData = trei.DataInicial.ToString("yyyyMMdd");
+            txtDataFinal.SData = trei.DataFinal.ToString("yyyyMMdd");
             psOrientador.Texto = trei.Orientador;
             psInstrutor.Texto = trei.Instrutor;
             dpFormulario.SelectedValue = trei.FormularioID.ToString();
-            List<TreinamentoCargo> lista = new TreinamentoCargoDB().CarregaPeloTreinamento(trei.TreinamentoID);
-            DataTable oDt = new DataTable();
-            oDt.Columns.Add("CODIGO");
-            oDt.Columns.Add("TITULO");
+            List<TreinamentoAlvo> lista = new TreinamentoAlvoDB().CarregaPeloTreinamento(trei.TreinamentoID);
+            DataTable oDt = CriaDataTable();
             Rotinas.Rotinas oUteis = new Rotinas.Rotinas();
 
-            foreach (TreinamentoCargo item in lista)
+            foreach (TreinamentoAlvo item in lista)
             {
-                oDt.Rows.Add(item.Cargo, oUteis.PegaTabe(1, "040", item.Cargo));
+                oDt.Rows.Add(item.Cargo, item.CargoTitulo, item.Lotacao, item.LotacaoTitulo, item.Estab, item.EstabTitulo);
             }
             grdModal.CarregaDados(oDt);
             ViewState["listaTreinamentos"] = oDt;
@@ -333,11 +262,30 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
     {
         string sMsg = string.Empty;
         if (string.IsNullOrWhiteSpace(txtCodigo.Texto))
-            msgAlertModal.Texto += "Campo código é obrigatório. ";
+            msgAlertModal.Texto += "O Código é obrigatório. ";
 
-        if (string.IsNullOrWhiteSpace(txtCampo_Titulo.Texto))
-            msgAlertModal.Texto += " Campo título é obrigatório. ";
-
+        if (string.IsNullOrWhiteSpace(txtTitulo.Texto))
+            msgAlertModal.Texto += " O Título é obrigatório. ";
+        if (string.IsNullOrWhiteSpace(txtDataInicial.SData))
+            msgAlertModal.Texto += " A Data Inicial é obrigatória. ";
+        else
+        {
+            DateTime ini = Funcoes.Funcoes.TextoemData(txtDataInicial.SData);
+            if (ini.Date < DateTime.Now.Date)
+                msgAlertModal.Texto += " A Data Inicial não pode conter data anteiror a data atual. ";
+        }
+        if (string.IsNullOrWhiteSpace(txtDataFinal.Texto))
+            msgAlertModal.Texto += " A Data Final é obrigatória. ";
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(txtDataInicial.SData))
+            {
+                DateTime ini = Funcoes.Funcoes.TextoemData(txtDataInicial.SData);
+                DateTime fim = Funcoes.Funcoes.TextoemData(txtDataFinal.SData);
+                if (fim < ini)
+                    msgAlertModal.Texto += " A Data Final não pode conter data anteiror a data inicial. ";
+            }
+        }
         /* //Opção usando VB um pouco mais verboso mas também funciona
          string sDataHoje = Funcoes.Funcoes.DatadeHoje(true, true);
          string sPrazo = dPrazo.SData;
@@ -345,21 +293,14 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
              sMsg += "data invãlida";
              */
         if (txtPrazo.EstaVazio)
-        {
-
-            msgAlertModal.Texto += " Campo prazo é obrigatório. ";
-        }
-        //Opção 2
+            msgAlertModal.Texto += " O Prazo é obrigatório. ";
         else
         {
-
-            DateTime dtPrazo = Funcoes.Funcoes.TextoemData(txtPrazo.SData);
-            if (dtPrazo.Date < DateTime.Now)
-            {
-                msgAlertModal.Texto += " Campo prazo não pode conter data anteiror a data atual. ";
-
-            }
+            if (txtPrazo.Texto.Equals("0") || txtPrazo.Texto.Equals("00") || txtPrazo.Texto.Equals("000"))
+                msgAlertModal.Texto += " O Prazo está inválido. ";
         }
+        if (string.IsNullOrWhiteSpace(txtCargaHoraria.SHora))
+            msgAlertModal.Texto += " A Carga Horária é obrigatória. ";
 
         if (string.IsNullOrWhiteSpace(msgAlertModal.Texto))
         {
@@ -384,35 +325,43 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         Banco.Conexao conexao = new Banco.Conexao();
         conexao.AbreConexao();
         TreinamentoDB dB = new TreinamentoDB();
-        TreinamentoCargoDB tcargoDb = new TreinamentoCargoDB();
+        TreinamentoAlvoDB tcargoDb = new TreinamentoAlvoDB();
         Treinamentos.Treinamento trei = new Treinamentos.Treinamento();
 
         if (bEdita)//se bEdita True ele altera as informações editadas
             trei.TreinamentoID = int.Parse(hfId.Value);
 
         trei.Codigo = txtCodigo.Texto;
-        trei.Titulo = txtCampo_Titulo.Texto;
+        trei.Titulo = txtTitulo.Texto;
+        trei.DataInicial = Funcoes.Funcoes.TextoemData(txtDataInicial.SData);
+        trei.DataFinal = Funcoes.Funcoes.TextoemData(txtDataFinal.SData);
         trei.LinkVideo = txtLinkVideo.Texto;
         trei.Orientador = psOrientador.Texto;
         trei.Instrutor = psInstrutor.Texto;
-        trei.Prazo = Funcoes.Funcoes.TextoemData(txtPrazo.SData);
+        trei.Prazo = int.Parse(txtPrazo.Texto);
+        trei.CargaHoraria = txtCargaHoraria.Texto;
         trei.FormularioID = int.Parse(dpFormulario.SelectedValue);
-       
+        string caminhoArquivo = hdCaminho.Value.ToString();
 
-        if (bEdita)//editar true ele edita informações
+
+        if (!string.IsNullOrEmpty(hdCaminho.Value.ToString()))
+        {
+            FileUpload upload = new FileUpload();
+
+            upload.SaveAs(Constantes.Ambiente.CaminhoSite + "temp\\" + caminhoArquivo);
+
+            Avaliacao.Anexo.AdicionaDocumento(trei.TreinamentoID.ToString(), Server.MapPath("../temp/" + caminhoArquivo));
+
+            
+        }
+
+        conexao.IniciaTransacao();
+        if (bEdita)
         {
 
             bResultado = dB.Altera(conexao, trei);
+
             bResultado = tcargoDb.ExcluiPeloTreinamento(conexao, trei.TreinamentoID);
-            if (flpChecklist.HasFile)
-            {
-
-                flpChecklist.SaveAs(Constantes.Ambiente.CaminhoSite + "temp\\" + flpChecklist.FileName);
-
-                Avaliacao.Anexo.AdicionaDocumento(trei.TreinamentoID.ToString(), Server.MapPath("../temp/" + flpChecklist.FileName));
-                
-            }
-
         }
         else//se bEdita for false ele começa o processo para gravar novas informações no DB.
         {
@@ -424,18 +373,24 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
             DataTable oDt = ViewState["listaTreinamentos"] as DataTable;
             foreach (DataRow row in oDt.Rows)
             {
-                TreinamentoCargo tc = new TreinamentoCargo();
+                TreinamentoAlvo tc = new TreinamentoAlvo();
                 tc.TreinamentoID = trei.TreinamentoID;
-                tc.Cargo = row["CODIGO"].ToString();
-                tcargoDb.Inclui(conexao, tc);
-               
+                tc.Cargo = row["CARGO"].ToString();
+                tc.Lotacao = row["LOTACAO"].ToString();
+                tc.Estab = row["ESTAB"].ToString();
+                bResultado = tcargoDb.Inclui(conexao, tc);
+                if (!bResultado)
+                    break;
             }
-            if (flpChecklist.HasFile)
+            if (!string.IsNullOrEmpty(hdCaminho.Value.ToString()))
             {
+                FileUpload upload = new FileUpload();
 
-                flpChecklist.SaveAs(Constantes.Ambiente.CaminhoSite + "temp\\" + flpChecklist.FileName);
+               
 
-                Avaliacao.Anexo.AdicionaDocumento(trei.TreinamentoID.ToString(), Server.MapPath("../temp/" + flpChecklist.FileName));
+                upload.SaveAs(Constantes.Ambiente.CaminhoSite + "temp\\" + caminhoArquivo);
+
+                Avaliacao.Anexo.AdicionaDocumento(trei.TreinamentoID.ToString(), Server.MapPath("../temp/" + caminhoArquivo));
 
 
                 //lblChecklist.Text = "Arquivo salvo com sucesso." + ArquivoUpLoad;
@@ -445,6 +400,7 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         //adicionar condicional se bResultado for true grava se bResultado for false mostra mensagem de erro entre cabeçario e campo código, e mantém campos preenchidos.
         if (bResultado)
         {
+            conexao.TerminaTransacao();
             MsgConfirma.Texto = "Registro salvo com sucesso.";
             MsgConfirma.Exibir();
             CarregaGrid();
@@ -453,7 +409,8 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         }
         else
         {
-            msgModalConfirmacaoErro.Texto = "Erro Não foi possivel salvar registro.";
+            conexao.DesfazTransacao();
+            msgModalConfirmacaoErro.Texto = "Não foi possivel salvar registro.";
             msgModalConfirmacaoErro.Exibir();
             CarregaGrid();
             HabilitaDiv(false);
@@ -469,10 +426,10 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         Banco.Conexao conexao = new Banco.Conexao();
         Treinamentos.Treinamento trei = new Treinamentos.Treinamento();
 
-        TreinamentoCargoDB dB = new TreinamentoCargoDB();
+        TreinamentoAlvoDB dB = new TreinamentoAlvoDB();
         bool bRetorno = true;
-        List<TreinamentoCargo> aux = dB.Carrega(conexao, "#TreinamentoID = " + iTreinamentoID.ToString());
-        foreach (TreinamentoCargo item in aux)
+        List<TreinamentoAlvo> aux = dB.Carrega(conexao, "#TreinamentoID = " + iTreinamentoID.ToString());
+        foreach (TreinamentoAlvo item in aux)
         {
             bRetorno = dB.Inclui(conexao, item);
             if (!bRetorno)
@@ -489,39 +446,56 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
         return grdModal.TotalItens;
     }
 
-    private void AdicionaCargoGridModal()
-    {   
-        Treinamentos.Treinamento trei = new Treinamentos.Treinamento();
-        trei.Codigo = tsCargo.CodigoSelecionado;
-        string codigo = tsCargo.Sucinta;//recebe valor da string que é carregada ao lado do campo código
+    private DataTable CriaDataTable()
+    {
+        DataTable oDt = new DataTable();
+        oDt.Columns.Add("CARGO");
+        oDt.Columns.Add("CARGOTIT");
+        oDt.Columns.Add("LOTACAO");
+        oDt.Columns.Add("LOTACAOTIT");
+        oDt.Columns.Add("ESTAB");
+        oDt.Columns.Add("ESTABTIT");
+        return oDt;
+    }
+
+    private bool ValidaAlvo()
+    {
+        return !tsCargo.CodigoEncontrado || !tsLotacao.CodigoEncontrado || !tsEstab.CodigoEncontrado;
+    }
+
+    private void AdicionarAlvoModal()
+    {
+        Treinamentos.TreinamentoAlvo alvo = new Treinamentos.TreinamentoAlvo();
+        alvo.Cargo = tsCargo.CodigoSelecionado;
+        alvo.Lotacao = tsLotacao.CodigoSelecionado;
+        alvo.Estab = tsEstab.CodigoSelecionado;
         DataTable oDt = ViewState["listaTreinamentos"] as DataTable;
         if (oDt == null)
-        {
-            oDt = new DataTable();
-            oDt.Columns.Add("CODIGO");
-            oDt.Columns.Add("TITULO");
-        }
-        oDt.Rows.Add(trei.Codigo, codigo);
+            oDt = CriaDataTable();
+
+        oDt.Rows.Add(alvo.Cargo, alvo.CargoTitulo, alvo.Lotacao, alvo.LotacaoTitulo, alvo.Estab, alvo.EstabTitulo);
         grdModal.CarregaDados(oDt);
         ViewState["listaTreinamentos"] = oDt;
+        LimparAlvo();
+    }
+
+    private void LimparAlvo()
+    {
         tsCargo.Limpar();
-
+        tsLotacao.Limpar();
+        tsEstab.Limpar();
     }
 
-    private void limparFiltros()
+    protected void btnAddAlvo_Click(object sender, EventArgs e)
     {
-        cpCodigo.Texto = "";
-        cpTitulo.Texto = "";
-        dPrazo.Texto = "";
+        if (ValidaAlvo())
+            AdicionarAlvoModal();
+        else
+            msgAlertaAlvo.Exibir();
     }
 
-    protected void btnAddCargo_Click(object sender, EventArgs e)
-    {
-        AdicionaCargoGridModal();
-       
-    }
 
-    protected void btnExcluir_Click(object sender, EventArgs e)
+    protected void btnExcluirAlvo_Click(object sender, EventArgs e)
     {
         ExcluirLinhaGrdModal();
 
@@ -551,19 +525,20 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
     protected void LimpaCamposModal()
     {
         txtCodigo.Texto = string.Empty;
-        txtCampo_Titulo.Texto = string.Empty;
+        txtTitulo.Texto = string.Empty;
         txtLinkVideo.Texto = string.Empty;
         txtPrazo.Texto = string.Empty;
         psInstrutor.Texto = string.Empty;
         psInstrutor.Texto = string.Empty;
-        tsCargo.Texto = string.Empty;
+        txtDataFinal.Limpar();
+        txtDataInicial.Limpar();
+        txtCargaHoraria.Limpar();
         hfId.Value = string.Empty;
         dpFormulario.SelectedValue = "0";
-        DataTable oDt = new DataTable();
-        oDt.Columns.Add("CODIGO");
-        oDt.Columns.Add("TITULO");
+        DataTable oDt = CriaDataTable();
         grdModal.CarregaDados(oDt);
         ViewState["listaTreinamentos"] = oDt;
+        LimparAlvo();
     }
 
     protected void btnSalvar_Click(object sender, EventArgs e)
@@ -583,17 +558,29 @@ public partial class wTreinamentos_wTrei_consulta : Abseed.Pagina
     private void ExcluirLinhaGrdModal()
     {
         DataTable oDt = ViewState["listaTreinamentos"] as DataTable;
-        TreinamentoCargo treiCargo = new TreinamentoCargo();
+        TreinamentoAlvo treiCargo = new TreinamentoAlvo();
         if (oDt != null)
         {
             foreach (string lista in grdModal.CodigosSelecionados)
             {
-                DataRow row = Funcoes.Funcoes.DataTablePegaColunaComValor(oDt, lista, "CODIGO");
+                string[] aux = lista.Split(';');
+                DataRow row = Funcoes.Funcoes.DataTablePegaColunaComValor(oDt, aux[0], "CARGO", aux[1], "LOTACAO", aux[2], "ESTAB");
                 oDt.Rows.Remove(row);
             }
         }
         grdModal.CarregaDados(oDt);
         ViewState["listaTreinamentos"] = oDt;
-        
+    }
+
+    protected void grdRegistros_LinhaCriada(DataRow oDr, TableRow linha)
+    {
+        var formId = oDr["FORMULARIOID"];
+        if (formId != null && !formId.Equals("0"))
+            linha.Cells[8].Text = "Sim";
+        else
+            linha.Cells[8].Text = "Não";
+
     }
 }
+
+
